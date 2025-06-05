@@ -22,7 +22,7 @@ frontend:
     # No tag here, OpenShift manages the tags
 
   service:
-    type: LoadBalancer
+    type: ClusterIP
     port: 80
     targetPort: 8080
 
