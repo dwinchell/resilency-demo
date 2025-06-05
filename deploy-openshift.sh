@@ -114,7 +114,7 @@ echo "--- Deployment and Builds Complete! ---"
 echo "Your application should now be running."
 
 echo ""
-echo "--- Step 3: Access Information ---"
+echo "--- Access Information ---"
 # Fetch service ports dynamically for more robust output
 FRONTEND_SERVICE_PORT=$(kubectl get service "${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-frontend-service" -n "${OCP_PROJECT}" -o jsonpath='{.spec.ports[?(@.name=="http")].port}' || echo "N/A")
 BACKEND_SERVICE_PORT=$(kubectl get service "${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-backend-service" -n "${OCP_PROJECT}" -o jsonpath='{.spec.ports[?(@.name=="http")].port}' || echo "N/A")
@@ -135,21 +135,20 @@ echo "  http://${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-backend-service:${BACKEND
 
 
 echo ""
-echo "--- Step 4: Configure GitHub Webhooks for Automated Builds ---"
+echo "--- Configure GitHub Webhooks for Automated Builds ---"
 echo "To automatically trigger a new image build on each push to GitHub, follow these steps:"
 echo ""
 echo "1.  Get Webhook URLs and Secrets:"
-echo "    Run the following commands to get the webhook URLs and the associated secrets."
+echo "    Run the following commands to get the full BuildConfig description."
+echo "    In the output, look for the 'GitHub webhook' URL under the 'Triggers' section."
+echo "    Also note the 'Secret' value from the URL for later configuration."
 echo "    Keep these secrets secure."
 echo ""
-echo "    Frontend Webhook Details:"
-oc describe bc "${FRONTEND_BC_NAME}" -n "${OCP_PROJECT}" | grep "GitHub webhook"
+echo "    Frontend BuildConfig GitHub webook:"
+oc describe bc "${FRONTEND_BC_NAME}" -n "${OCP_PROJECT}" | grep URL | grep 'github$' | sed 's/.*\(https.*\)/\1/'
 echo ""
-echo "    Backend Webhook Details:"
-oc describe bc "${BACKEND_BC_NAME}" -n "${OCP_PROJECT}" | grep "GitHub webhook"
-
-echo ""
-echo "    (If the 'GitHub webhook' line is not visible, ensure your BuildConfigs include the webhook trigger and the secrets are created by Helm.)"
+echo "    Backend BuildConfig GitHub webook:"
+oc describe bc "${BACKEND_BC_NAME}" -n "${OCP_PROJECT}" | grep URL | grep 'github$' | sed 's/.*\(https.*\)/\1/'
 echo ""
 echo "2.  Go to Your GitHub Repository Settings:"
 echo "    Open your GitHub repository in a web browser."
@@ -166,7 +165,7 @@ echo "    -   Ensure 'Active' is checked."
 echo "    -   Click 'Add webhook'."
 
 echo ""
-echo "After configuring, any push to your Git branch (${git.branch} from values.yaml) will trigger a new build in OpenShift."
+echo "After configuring, any push to your Git branch (main by default) will trigger a new build in OpenShift."
 
 
 echo ""
