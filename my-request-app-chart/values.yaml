@@ -26,6 +26,14 @@ frontend:
     port: 80
     targetPort: 8080
 
+  route:
+    enabled: true # Set to false to disable route creation
+    host: ""      # Specify a custom hostname (e.g., "my-app.example.com").
+                  # Leave blank for OpenShift to generate one automatically.
+    # tls:          # Uncomment and configure if you need TLS termination
+    #   termination: "edge"
+    #   insecureEdgeTerminationPolicy: "Redirect"
+
   resources: {}
 
 # --- Backend Application Settings ---

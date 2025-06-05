@@ -1,0 +1,27 @@
+# jfs-demo/my-request-app-chart/templates/frontend-route.yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  # Name the route using Helm's fullname helper for consistency
+  name: {{ include "my-request-app-chart.fullname" . }}-frontend-route
+  labels:
+    {{- include "my-request-app-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  # Link the route to your frontend service
+  to:
+    kind: Service
+    name: {{ include "my-request-app-chart.fullname" . }}-frontend-service
+    weight: 100 # Standard weight for the only service in the route
+  # Target the 'http' port defined in your frontend service
+  port:
+    targetPort: http
+  # Conditionally add a custom host if specified in values.yaml
+  {{- if .Values.frontend.route.host }}
+  host: {{ .Values.frontend.route.host | quote }}
+  {{- end }}
+  # Optional: Add TLS termination if you want HTTPS
+  # tls:
+  #   termination: edge # or 'passthrough', 'reencrypt'
+  #   insecureEdgeTerminationPolicy: Redirect # or 'Allow', 'None'
+  wildcardPolicy: None # Standard for most routes
