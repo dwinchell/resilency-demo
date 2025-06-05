@@ -1,0 +1,30 @@
+# Use the Universal Base Image 8 as the base image
+FROM registry.access.redhat.com/ubi8/ubi
+
+# Install Node.js 18 LTS and npm using dnf module
+# This method is recommended for installing Node.js on UBI.
+# First, enable the Node.js 18 module stream, then install the package.
+RUN dnf module enable -y nodejs:18 && \
+    dnf install -y nodejs && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json first to leverage Docker's build cache.
+# This way, npm install is only re-run if dependencies change.
+COPY package*.json ./
+
+# Install Node.js dependencies
+RUN npm install
+
+# Copy the rest of the application code
+# Assuming your server.js is in the same directory as this Dockerfile.
+COPY server.js ./
+
+# Expose port 3000, which your Node.js server listens on
+EXPOSE 3000
+
+# Command to start the Node.js application
+CMD ["node", "server.js"]

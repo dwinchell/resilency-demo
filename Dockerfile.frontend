@@ -1,0 +1,20 @@
+# Use the Universal Base Image 8 as the base image
+FROM registry.access.redhat.com/ubi8/ubi
+
+# Install Nginx
+# dnf is the package manager for UBI8
+RUN dnf install -y nginx && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf
+
+# Copy the static HTML file into the Nginx default web root directory.
+# Assuming your index.html is in the same directory as this Dockerfile.
+COPY index.html /usr/share/nginx/html/index.html
+
+# Expose port 80, which Nginx listens on by default
+EXPOSE 80
+
+# Command to start Nginx in the foreground
+# The "-g 'daemon off;'" ensures Nginx runs in the foreground,
+# which is necessary for Docker containers to keep running.
+CMD ["nginx", "-g", "daemon off;"]

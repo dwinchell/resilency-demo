@@ -1,0 +1,26 @@
+{
+  "name": "request-count-backend",
+  "version": "1.0.0",
+  "description": "A simple Node.js backend to serve and increment a request count.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "node",
+    "express",
+    "backend",
+    "count",
+    "api"
+  ],
+  "author": "Your Name/Organization",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
