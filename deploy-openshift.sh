@@ -63,8 +63,7 @@ echo "--- Checking for existing Helm release '${HELM_RELEASE_NAME}' in project '
 if helm list -n "${OCP_PROJECT}" --short | grep -q "^${HELM_RELEASE_NAME}$"; then
     echo "Stopping and removing existing release '${HELM_RELEASE_NAME}' for a clean deployment..."
     helm uninstall "${HELM_RELEASE_NAME}" -n "${OCP_PROJECT}" --timeout 5m || {
-        echo "Error: Failed to uninstall existing Helm release '${HELM_RELEASE_NAME}'. Please check its status with 'helm status ${HELM_RELEASE_NAME} -n ${OCP_PROJECT}' and try manual cleanup if necessary. Exiting."
-        exit 1
+        echo "Error: Failed to uninstall existing Helm release '${HELM_RELEASE_NAME}'. Please check its status with 'helm status ${HELM_RELEASE_NAME} -n ${OCP_PROJECT}' and try manual cleanup if necessary. Exiting."; exit 1;
     }
     echo "Existing release uninstalled successfully."
 else
@@ -72,7 +71,6 @@ else
 fi
 
 echo "Installing/Upgrading Helm chart '${HELM_RELEASE_NAME}' in project '${OCP_PROJECT}'..."
-# Pass the dynamic --set arguments to Helm
 helm upgrade --install "${HELM_RELEASE_NAME}" . -n "${OCP_PROJECT}" ${HELM_SET_ARGS} || { echo "Error: Helm chart installation failed. Check 'helm list -n ${OCP_PROJECT}' for status. Exiting."; exit 1; }
 
 echo "--- Helm Chart Deployed. Now triggering OpenShift Builds ---"
@@ -111,11 +109,12 @@ echo "--- Builds completed. Waiting for deployments to rollout (if new images we
 kubectl rollout status deployment/${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-frontend -n "${OCP_PROJECT}" --timeout=5m || { echo "Error: Frontend deployment failed to rollout within timeout. Check 'oc get pods -n ${OCP_PROJECT}'. Exiting."; exit 1; }
 kubectl rollout status deployment/${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-backend -n "${OCP_PROJECT}" --timeout=5m || { echo "Error: Backend deployment failed to rollout within timeout. Check 'oc get pods -n ${OCP_PROJECT}'. Exiting."; exit 1; }
 
+echo ""
 echo "--- Deployment and Builds Complete! ---"
 echo "Your application should now be running."
 
 echo ""
-echo "--- Access Information ---"
+echo "--- Step 3: Access Information ---"
 # Fetch service ports dynamically for more robust output
 FRONTEND_SERVICE_PORT=$(kubectl get service "${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-frontend-service" -n "${OCP_PROJECT}" -o jsonpath='{.spec.ports[?(@.name=="http")].port}' || echo "N/A")
 BACKEND_SERVICE_PORT=$(kubectl get service "${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-backend-service" -n "${OCP_PROJECT}" -o jsonpath='{.spec.ports[?(@.name=="http")].port}' || echo "N/A")
@@ -123,15 +122,56 @@ BACKEND_SERVICE_PORT=$(kubectl get service "${HELM_RELEASE_NAME}-${FULL_CHART_NA
 FRONTEND_ROUTE_NAME="${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-frontend-route"
 FRONTEND_ROUTE_HOST=$(oc get route "${FRONTEND_ROUTE_NAME}" -n "${OCP_PROJECT}" -o jsonpath='{.spec.host}' || echo "N/A")
 
+echo "Frontend Application URL (via OpenShift Route):"
 if [ "${FRONTEND_ROUTE_HOST}" != "N/A" ]; then
-    echo "Frontend URL (via Route):   http://${FRONTEND_ROUTE_HOST}"
+    echo "  http://${FRONTEND_ROUTE_HOST}"
 else
-    echo "Frontend Route not found or hostname not provisioned. Check 'oc get route ${FRONTEND_ROUTE_NAME} -n ${OCP_PROJECT}'"
+    echo "  Frontend Route not found or hostname not provisioned. Check 'oc get route ${FRONTEND_ROUTE_NAME} -n ${OCP_PROJECT}'"
 fi
 
-echo "Backend internal URL (used by frontend): http://${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-backend-service:${BACKEND_SERVICE_PORT}/get-count"
 echo ""
+echo "Backend Internal URL (used by frontend within the cluster):"
+echo "  http://${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-backend-service:${BACKEND_SERVICE_PORT}/get-count"
+
+
+echo ""
+echo "--- Step 4: Configure GitHub Webhooks for Automated Builds ---"
+echo "To automatically trigger a new image build on each push to GitHub, follow these steps:"
+echo ""
+echo "1.  Get Webhook URLs and Secrets:"
+echo "    Run the following commands to get the webhook URLs and the associated secrets."
+echo "    Keep these secrets secure."
+echo ""
+echo "    Frontend Webhook Details:"
+oc describe bc "${FRONTEND_BC_NAME}" -n "${OCP_PROJECT}" | grep "GitHub webhook"
+echo ""
+echo "    Backend Webhook Details:"
+oc describe bc "${BACKEND_BC_NAME}" -n "${OCP_PROJECT}" | grep "GitHub webhook"
+
+echo ""
+echo "    (If the 'GitHub webhook' line is not visible, ensure your BuildConfigs include the webhook trigger and the secrets are created by Helm.)"
+echo ""
+echo "2.  Go to Your GitHub Repository Settings:"
+echo "    Open your GitHub repository in a web browser."
+echo "    Navigate to 'Settings' > 'Webhooks'."
+echo ""
+echo "3.  Add Webhooks for Frontend and Backend:"
+echo "    Click the 'Add webhook' button for each BuildConfig."
+echo "    For each webhook:"
+echo "    -   **Payload URL**: Paste the GitHub webhook URL obtained from 'oc describe bc' (from step 1 above)."
+echo "    -   **Content type**: Select 'application/json'."
+echo "    -   **Secret**: Paste the exact secret string you set in your 'values.yaml' for this BuildConfig's webhook (e.g., for 'frontend.webhookSecret')."
+echo "    -   **Which events would you like to trigger this webhook?**: Select 'Just the push event'."
+echo "    -   Ensure 'Active' is checked."
+echo "    -   Click 'Add webhook'."
+
+echo ""
+echo "After configuring, any push to your Git branch (${git.branch} from values.yaml) will trigger a new build in OpenShift."
+
+
+echo ""
+echo "--- Additional Commands for Debugging/Monitoring ---"
 echo "To view build logs: 'oc logs -f bc/${FRONTEND_BC_NAME}' or 'oc logs -f bc/${BACKEND_BC_NAME}'"
-echo "To view app logs: 'oc logs -f deployment/${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-frontend' or 'oc logs -f deployment/${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-backend'"
+echo "To view application pod logs: 'oc logs -f deployment/${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-frontend' or 'oc logs -f deployment/${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-backend'"
 echo ""
 echo "Script finished."
