@@ -26,7 +26,7 @@ spec:
       containers:
         - name: backend
           # IMPORTANT:  Reference the ImageStreamTag
-          image: '{{ .Values.backend.image.repository }}:latest'
+          image: '{{ include "my-request-app-chart.fullname" . }}-backend-image:latest'
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           ports:
             - name: http

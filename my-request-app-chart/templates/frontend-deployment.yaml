@@ -31,7 +31,7 @@ spec:
       containers:
         - name: frontend
           # IMPORTANT: Reference the ImageStreamTag
-          image: '{{ .Values.frontend.image.repository }}:latest'
+          image: '{{ include "my-request-app-chart.fullname" . }}-frontend-image:latest'
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
             - name: http
