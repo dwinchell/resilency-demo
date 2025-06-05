@@ -11,7 +11,7 @@ spec:
   # Link the route to your frontend service
   to:
     kind: Service
-    name: {{ include "my-request-app-chart.fullname" . }}-frontend-service
+    name: {{ include "my-request-app-chart.fullname" . }}-frontend
     weight: 100 # Standard weight for the only service in the route
   # Target the 'http' port defined in your frontend service
   port:
