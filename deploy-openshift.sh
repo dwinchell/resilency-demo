@@ -65,7 +65,7 @@ fi
 # --wait: wait until all resources are in a ready state.
 # --timeout: maximum time to wait for the Helm operation.
 echo "Installing/Upgrading Helm chart '${HELM_RELEASE_NAME}' in project '${OCP_PROJECT}'..."
-helm upgrade --install "${HELM_RELEASE_NAME}" . -n "${OCP_PROJECT}" --atomic --timeout 10m || { echo "Error: Helm chart installation failed. Check 'helm list -n ${OCP_PROJECT}' for status. Exiting."; exit 1; }
+helm upgrade --install "${HELM_RELEASE_NAME}" . -n "${OCP_PROJECT}" || { echo "Error: Helm chart installation failed. Check 'helm list -n ${OCP_PROJECT}' for status. Exiting."; exit 1; }
 
 echo "--- Helm Chart Deployed. Now triggering OpenShift Builds ---"
 
@@ -111,8 +111,8 @@ echo "Backend build completed."
 echo "--- Builds completed. Waiting for deployments to rollout (if new images were built) ---"
 # Wait for the deployments to become ready after new images are available.
 # This ensures that your pods are running the newly built images.
-kubectl rollout status deployment/${HELM_RELEASE_NAME}-frontend -n "${OCP_PROJECT}" --timeout=5m || { echo "Error: Frontend deployment failed to rollout within timeout. Check 'oc get pods -n ${OCP_PROJECT}'. Exiting."; exit 1; }
-kubectl rollout status deployment/${HELM_RELEASE_NAME}-backend -n "${OCP_PROJECT}" --timeout=5m || { echo "Error: Backend deployment failed to rollout within timeout. Check 'oc get pods -n ${OCP_PROJECT}'. Exiting."; exit 1; }
+kubectl rollout status deployment/${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-frontend -n "${OCP_PROJECT}" --timeout=5m || { echo "Error: Frontend deployment failed to rollout within timeout. Check 'oc get pods -n ${OCP_PROJECT}'. Exiting."; exit 1; }
+kubectl rollout status deployment/${HELM_RELEASE_NAME}-${FULL_CHART_NAME}-backend -n "${OCP_PROJECT}" --timeout=5m || { echo "Error: Backend deployment failed to rollout within timeout. Check 'oc get pods -n ${OCP_PROJECT}'. Exiting."; exit 1; }
 
 echo "--- Deployment and Builds Complete! ---"
 echo "Your application should now be running."

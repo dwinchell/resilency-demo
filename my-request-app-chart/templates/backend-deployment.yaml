@@ -25,8 +25,8 @@ spec:
     spec:
       containers:
         - name: backend
-          # IMPORTANT:  Reference the ImageStreamTag
-          image: '{{ include "my-request-app-chart.fullname" . }}-backend-image:latest'
+          # IMPORTANT: Reference the full ImageStream path for OpenShift
+          image: 'image-registry.openshift-image-registry.svc:5000/{{ .Release.Namespace }}/{{ include "my-request-app-chart.fullname" . }}-backend-image:latest'
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           ports:
             - name: http

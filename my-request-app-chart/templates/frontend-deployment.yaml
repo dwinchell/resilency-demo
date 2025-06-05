@@ -30,8 +30,8 @@ spec:
             name: {{ include "my-request-app-chart.fullname" . }}-frontend-html
       containers:
         - name: frontend
-          # IMPORTANT: Reference the ImageStreamTag
-          image: '{{ include "my-request-app-chart.fullname" . }}-frontend-image:latest'
+          # IMPORTANT: Reference the full ImageStream path for OpenShift
+          image: 'image-registry.openshift-image-registry.svc:5000/{{ .Release.Namespace }}/{{ include "my-request-app-chart.fullname" . }}-frontend-image:latest'
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
             - name: http
