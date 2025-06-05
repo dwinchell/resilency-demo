@@ -2,18 +2,18 @@
 FROM registry.access.redhat.com/ubi8/ubi
 
 # Install Nginx
-# dnf is the package manager for UBI8
 RUN dnf install -y nginx && \
     dnf clean all && \
     rm -rf /var/cache/dnf
 
+# Copy custom Nginx configuration, overwriting the default
+COPY nginx-custom.conf /etc/nginx/nginx.conf
+
 # No need to copy index.html here, it will be mounted from a ConfigMap
 # COPY index.html /usr/share/nginx/html/index.html
 
-# Expose port 80, which Nginx listens on by default
-EXPOSE 80
+# Expose port 8080 (declarative only)
+EXPOSE 8080
 
 # Command to start Nginx in the foreground
-# The "-g 'daemon off;'" ensures Nginx runs in the foreground,
-# which is necessary for Docker containers to keep running.
 CMD ["nginx", "-g", "daemon off;"]
