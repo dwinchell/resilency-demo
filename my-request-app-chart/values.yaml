@@ -34,6 +34,10 @@ frontend:
     #   termination: "edge"
     #   insecureEdgeTerminationPolicy: "Redirect"
 
+
+  # Webhook secret for GitHub trigger
+  webhookSecret: "" # Generate a strong, random string here (e.g., 'your-strong-random-secret-for-frontend')
+
   resources: {}
 
 # --- Backend Application Settings ---
@@ -48,6 +52,10 @@ backend:
     type: ClusterIP
     port: 3000
     targetPort: 3000
+
+
+  # Webhook secret for GitHub trigger
+  webhookSecret: "" # Generate a strong, random string here (e.g., 'your-strong-random-secret-for-backend')
 
   resources: {}
 

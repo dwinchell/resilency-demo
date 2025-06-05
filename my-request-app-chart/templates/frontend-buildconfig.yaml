@@ -1,3 +1,4 @@
+# jfs-demo/my-request-app-chart/templates/frontend-buildconfig.yaml
 apiVersion: build.openshift.io/v1
 kind: BuildConfig
 metadata:
@@ -21,5 +22,10 @@ spec:
       ref: {{ .Values.git.branch }}
     contextDir: {{ .Values.git.contextDir }} # Optional subdirectory
   triggers:
-    - type: ConfigChange
+    - type: ConfigChange # Keep this trigger
+    # NEW: GitHub Webhook Trigger
+    - type: GitHub
+      github:
+        secretReference:
+          name: {{ include "my-request-app-chart.fullname" . }}-frontend-webhook-secret
   runPolicy: Serial
