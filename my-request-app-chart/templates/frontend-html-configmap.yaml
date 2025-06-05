@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "my-request-app-chart.fullname" . }}-frontend-html
+  labels:
+    {{- include "my-request-app-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Request Count</title>
+        <style>
+            body {
+                font-family: sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                background-color: #f0f0f0;
+                color: #333;
+            }
+            .container {
+                text-align: center;
+                padding: 20px;
+                border-radius: 8px;
+                background-color: #fff;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+            h1 {
+                color: #007bff;
+            }
+            #requestCount {
+                font-size: 3em;
+                font-weight: bold;
+                margin-top: 10px;
+                color: #28a745;
+            }
+            .loading {
+                color: #6c757d;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Request Count</h1>
+            <div id="requestCount" class="loading">Loading...</div>
+        </div>
+
+        <script>
+            // *** IMPORTANT: This URL is injected by Helm using the Kubernetes service name! ***
+            const BACKEND_URL = "http://{{ include "my-request-app-chart.fullname" . }}-backend-service:{{ .Values.backend.service.port }}/get-count";
+
+            async function getRequestCount() {
+                const requestCountElement = document.getElementById('requestCount');
+                requestCountElement.textContent = 'Loading...';
+                requestCountElement.classList.add('loading');
+
+                try {
+                    const response = await fetch(BACKEND_URL);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (typeof data.count === 'number') {
+                        requestCountElement.textContent = data.count;
+                        requestCountElement.classList.remove('loading');
+                    } else {
+                        requestCountElement.textContent = 'Error: Invalid data';
+                        requestCountElement.classList.add('loading');
+                    }
+                } catch (error) {
+                    console.error('Error fetching request count:', error);
+                    requestCountElement.textContent = 'Error loading count';
+                    requestCountElement.classList.add('loading');
+                }
+            }
+
+            // Call the function immediately when the page loads
+            getRequestCount();
+
+            // Refresh every 5 seconds
+            setInterval(getRequestCount, 5000);
+        </script>
+    </body>
+    </html>

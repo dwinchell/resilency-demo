@@ -1,0 +1,54 @@
+# Default values for my-request-app-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+# --- Git Repository Settings ---
+git:
+  # IMPORTANT: Your Git repository URL
+  repository: https://github.com/dwinchell/resilency-demo/
+  # Branch to build from
+  branch: main
+  # Optional subdirectory within the repo where Dockerfiles are located
+  contextDir: .
+
+# --- Frontend Application Settings ---
+frontend:
+  image:
+    # IMPORTANT:  ImageStream name.  OpenShift will build into this.
+    repository: frontend-image  # No registry, just the ImageStream name
+    pullPolicy: Always # Ensure pods always pull the latest built image
+    # No tag here, OpenShift manages the tags
+
+  service:
+    type: LoadBalancer
+    port: 80
+    targetPort: 80
+
+  resources: {}
+
+# --- Backend Application Settings ---
+backend:
+  image:
+    # IMPORTANT: ImageStream name. OpenShift will build into this.
+    repository: backend-image  # No registry, just the ImageStream name
+    pullPolicy: Always # Ensure pods always pull the latest built image
+    # No tag here, OpenShift manages the tags
+
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+
+  resources: {}
+
+# --- General Kubernetes/OpenShift Settings ---
+podAnnotations: {}
+
+# --- Autoscaling (Optional) ---
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80

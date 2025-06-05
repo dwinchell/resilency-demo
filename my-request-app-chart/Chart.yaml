@@ -1,0 +1,6 @@
+apiVersion: v2
+name: my-request-app-chart
+description: A Helm chart for deploying a request count frontend and backend application with OpenShift BuildConfigs.
+type: application
+version: 0.1.0
+appVersion: "1.0"

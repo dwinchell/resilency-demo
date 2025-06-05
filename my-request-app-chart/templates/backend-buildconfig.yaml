@@ -1,0 +1,25 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: {{ include "my-request-app-chart.fullname" . }}-backend-build
+  labels:
+    {{- include "my-request-app-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: {{ include "my-request-app-chart.fullname" . }}-backend-image:latest
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile.backend # Path to the Dockerfile in the Git repo
+  source:
+    type: Git
+    git:
+      uri: {{ .Values.git.repository }}
+      ref: {{ .Values.git.branch }}
+    contextDir: {{ .Values.git.contextDir }} # Optional subdirectory
+  triggers:
+    - type: ConfigChange
+  runPolicy: Serial

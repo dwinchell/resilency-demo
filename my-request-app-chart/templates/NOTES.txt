@@ -1,0 +1,42 @@
+Thank you for installing {{ include "my-request-app-chart.name" . }}!
+
+1.  **Trigger Image Builds:** After installing the chart, you need to trigger the image builds.
+    Run the following commands:
+    ```bash
+    oc start-build {{ include "my-request-app-chart.fullname" . }}-frontend-build
+    oc start-build {{ include "my-request-app-chart.fullname" . }}-backend-build
+    ```
+    This will start the builds of your frontend and backend images within OpenShift.
+
+2.  Get the URL for the frontend:
+    {{- if eq .Values.frontend.service.type "NodePort" }}
+    export NODE_PORT=$(kubectl get services {{ include "my-request-app-chart.fullname" . }}-frontend-service -o jsonpath='{.spec.ports[0].nodePort}')
+    export NODE_IP=$(kubectl get nodes --selector='!node-role.kubernetes.io/control-plane' -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}' | head -n 1) # Gets one internal IP
+    echo "Frontend URL: http://${NODE_IP}:${NODE_PORT}"
+    {{- else if eq .Values.frontend.service.type "LoadBalancer" }}
+      {{- if contains "localhost" .Values.git.repository }}
+    echo "Frontend service is a LoadBalancer. If running on a local cluster (e.g., minikube, kind):"
+    echo "  - If minikube: run 'minikube service {{ include "my-request-app-chart.fullname" . }}-frontend-service' to open the service."
+    echo "  - If kind: you may need to set up ingress or port-forward the service to access it externally:"
+    echo "    kubectl port-forward service/{{ include "my-request-app-chart.fullname" . }}-frontend-service {{ .Values.frontend.service.port }}:{{ .Values.frontend.service.targetPort }}"
+    echo "    Then access http://localhost:{{ .Values.frontend.service.port }}"
+      {{- else }}
+    echo "Frontend service is a LoadBalancer. It may take a few moments for the external IP to be provisioned."
+    echo "You can check its status with: kubectl get services {{ include "my-request-app-chart.fullname" . }}-frontend-service -w"
+    echo "Once an external IP is available, access it at: http://<EXTERNAL-IP>:{{ .Values.frontend.service.port }}"
+      {{- end }}
+    {{- end }}
+
+3.  Backend internal URL (used by frontend, no direct external access typically):
+    http://{{ include "my-request-app-chart.fullname" . }}-backend-service:{{ .Values.backend.service.port }}/get-count
+
+4.  To view logs:
+    ```bash
+    oc logs -f deployment/{{ include "my-request-app-chart.fullname" . }}-frontend -c frontend
+    oc logs -f deployment/{{ include "my-request-app-chart.fullname" . }}-backend -c backend
+    ```
+
+5.  To uninstall the chart:
+    ```bash
+    helm uninstall <RELEASE_NAME>
+    ```

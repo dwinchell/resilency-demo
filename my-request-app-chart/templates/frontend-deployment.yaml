@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-request-app-chart.fullname" . }}-frontend
+  labels:
+    {{- include "my-request-app-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "my-request-app-chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "my-request-app-chart.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: frontend
+    spec:
+      # Mount the index.html from the ConfigMap
+      volumes:
+        - name: frontend-html
+          configMap:
+            name: {{ include "my-request-app-chart.fullname" . }}-frontend-html
+      containers:
+        - name: frontend
+          # IMPORTANT: Reference the ImageStreamTag
+          image: '{{ .Values.frontend.image.repository }}:latest'
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.frontend.service.targetPort }}
+              protocol: TCP
+          volumeMounts:
+            - name: frontend-html
+              mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}

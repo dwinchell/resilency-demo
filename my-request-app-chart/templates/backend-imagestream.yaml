@@ -1,0 +1,10 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: {{ include "my-request-app-chart.fullname" . }}-backend-image
+  labels:
+    {{- include "my-request-app-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  lookupPolicy:
+    local: false # Important for BuildConfigs to find the ImageStream

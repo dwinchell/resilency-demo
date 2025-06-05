@@ -7,9 +7,8 @@ RUN dnf install -y nginx && \
     dnf clean all && \
     rm -rf /var/cache/dnf
 
-# Copy the static HTML file into the Nginx default web root directory.
-# Assuming your index.html is in the same directory as this Dockerfile.
-COPY index.html /usr/share/nginx/html/index.html
+# No need to copy index.html here, it will be mounted from a ConfigMap
+# COPY index.html /usr/share/nginx/html/index.html
 
 # Expose port 80, which Nginx listens on by default
 EXPOSE 80
