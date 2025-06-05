@@ -53,7 +53,7 @@ data:
 
         <script>
             // *** IMPORTANT: This URL is injected by Helm using the Kubernetes service name! ***
-            const BACKEND_URL = "http://{{ include "my-request-app-chart.fullname" . }}-backend-service:{{ .Values.backend.service.port }}/get-count";
+            const BACKEND_URL = "/api/get-count"; // Use a relative path that Nginx will proxy
 
             async function getRequestCount() {
                 const requestCountElement = document.getElementById('requestCount');
